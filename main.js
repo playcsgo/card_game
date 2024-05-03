@@ -1,106 +1,49 @@
+//DOM
+
 const GAME_STATE = {
   FirstCardAwaits: 'FirstCardAwaits',
   SecondCardAwaits: 'SecondCardAwaits',
-  CardsMatchFailed: 'CardsMatchFailed',
-  CardsMatched: 'CardsMatched',
-  GameFinished: 'GameFinished',
+  Check: 'check',
+  CardsMatch: 'CardsMatch',
+  CardMatchFailed: 'CardMatchFailed',
+  Completed: 'Completed'
 }
 
-const controller = {
-  currentState: GAME_STATE.FirstCardAwaits,
-
-  generateCards () {
-    view.displayCards(utility.getRandomNumberArray(52))
-  },
-
-  dispactchCardAction (card) {
-    if (!card.classList.contains('back')) return
-
-    switch (this.currentState) {
-      case GAME_STATE.FirstCardAwaits:
-        view.flipCards(card)
-        model.revealedCards.push(card)
-        this.currentState = GAME_STATE.SecondCardAwaits
-        break
-      
-      case GAME_STATE.SecondCardAwaits:
-        view.renderTriedTimes(++model.triedTimes)
-        view.flipCards(card)
-        model.revealedCards.push(card)
-        //進入判斷
-        if (model.isRevealedCardMatched()) {
-          //配對成功
-          view.renderScore(model.score += 10)
-          this.currentState = GAME_STATE.CardsMatched
-          view.pairCards(...model.revealedCards)
-          model.revealedCards =[]
-          if (model.score === 260) {
-            this.currentState = GAME_STATE.GameFinished
-            view.showGameFinished()
-            return
-          }
-          this.currentState = GAME_STATE.FirstCardAwaits
-        } else {
-          //配對失敗
-          this.currentState = GAME_STATE.CardsMatchFailed
-          view.appendWrongAnimation(...model.revealedCards)
-          setTimeout(this.resetCards, 1000)
-        }
-        break
-    }
-    console.log('this.currentState', this.currentState)
-    console.log('revealedCards', model.revealedCards)
-  },
-  resetCards () {
-    view.flipCards(model.revealedCards[0])
-    view.flipCards(model.revealedCards[1])
-    model.revealedCards = []
-    controller.currentState = GAME_STATE.FirstCardAwaits
-  }
-}
-
+//model { }
 const model = {
+  // deck: Array.from(Array(52).keys()),
   revealedCards: [],
-
-  isRevealedCardMatched () {
-    return this.revealedCards[0].dataset.index % 13 === this.revealedCards[1].dataset.index % 13 
-  },
-
-  score: 0,
-  triedTimes:0
+  curScore: 0,
+  goal: 20,
+  curTried: 1,
 }
 
-const Symbols = [
-  'https://assets-lighthouse.alphacamp.co/uploads/image/file/17989/__.png', // 黑桃
-  'https://assets-lighthouse.alphacamp.co/uploads/image/file/17992/heart.png', // 愛心
-  'https://assets-lighthouse.alphacamp.co/uploads/image/file/17991/diamonds.png', // 方塊
-  'https://assets-lighthouse.alphacamp.co/uploads/image/file/17988/__.png' // 梅花
-]
-
+//view{ }
 const view = {
-  getCardElement (index) {
-    return `
-    <div data-index="${index}" class="card back"></div>
-    `
+  symbol:[
+    'https://assets-lighthouse.alphacamp.co/uploads/image/file/17989/__.png', //spade
+    'https://assets-lighthouse.alphacamp.co/uploads/image/file/17992/heart.png', // heart
+    'https://assets-lighthouse.alphacamp.co/uploads/image/file/17991/diamonds.png', //diamond
+    'https://assets-lighthouse.alphacamp.co/uploads/image/file/17988/__.png' //club
+  ],
+ 
+  // 按照輸入的index轉換成撲克牌
+  getCardElement(index) {
+    return `<div class="card back" data-index="${index}"></div>`
   },
-  getCardContent (index) {
+  getCardContent(index) {
     const number = this.transformNumber((index % 13) + 1)
-    const symbol = Symbols[Math.floor(index / 13)]
+    const symbol = this.symbol[Math.floor(index / 13)]
     return `
-      <p>${number}</p>
-      <img src="${symbol}" alt="">
-      <p>${number}</p>
+    <p>${number}</p>
+    <img src=${symbol} alt="card-type">
+    <p>${number}</p>
     `
   },
 
-  displayCards (indexes) {
-    const rootElement = document.querySelector('#cards')
-    rootElement.innerHTML = indexes.map(index => this.getCardElement(index)).join("")
-  },
-
-  transformNumber (number) {
+  transformNumber(number) {
     switch (number) {
-      case 1: 
+      case 1:
         return 'A'
       case 11:
         return 'J'
@@ -112,63 +55,125 @@ const view = {
         return number
     }
   },
-  flipCards (...cards) {
-    cards.map(card => {
-      if (card.classList.contains('back')) {
-        card.classList.remove('back')
-        card.innerHTML = this.getCardContent(Number(card.dataset.index))
-        return
-      }
-      card.classList.add('back')
-      card.innerHTML = null
-    })
+  renderCards(amount) {
+    cards.innerHTML = this.shuffle(amount).map(index => this.getCardElement(index)).join('')
   },
-  pairCards (...cards) {
-    cards.map(card => {
-      card.classList.add('paired')
-    }) 
-  },
-  renderScore(score) {
-    document.querySelector('.score').textContent = `Score: ${score}`
-  },
-  renderTriedTimes(times) {
-    document.querySelector('.tried').textContent = `You've tried: ${times}`
-  },
-  appendWrongAnimation(...cards) {
-    cards.map(card => {
-      card.classList.add('wrong')
-      card.addEventListener('animationed', evnet => event.target.classList.remove('wrong'), {once: true})
-    })
-  },
-  showGameFinished () {
-    const div =document.createElement('div')
-    div.classList.add('completed')
-    div.innerHTML = `
-      <p>Completed</p>
-      <p>Score: ${model.score}</p>
-      <p>You've tried: ${model.triedTimes}</p>
-    `
-    const header = document.querySelector('#header')
-    header.before(div)
-  }
-}
-
-const utility = {
-  getRandomNumberArray(count) {
-    const number = Array.from(Array(count).keys())
-    for (let index = number.length -1; index > 0; index--) {
-      let randomIndex = Math.floor(Math.random() * (index + 1));
-      [number[index], number[randomIndex]] = [number[randomIndex], number[index]]
+  // 不用.mpa(),  使用forEach的方式
+  // renderCards2(indexes){
+  //   let rawHTML = ''
+  //   indexes.forEach(index => {
+  //     const number = this.transformNumber(index % 13 + 1)
+  //     const cardSymbol = this.symbol[Math.floor(index / 13)]
+  //     rawHTML += `
+  //     <div class="card ">
+  //       <p>${number}</p>
+  //       <img src=${cardSymbol} alt="card-type">
+  //       <p>${number}</p>
+  //     </div>
+  //     `
+  //   })
+  //   cards.innerHTML = rawHTML
+  // },
+  shuffle(amount){
+    const number = Array.from(Array(amount).keys())
+    for (let i = number.length - 1; i > 0; i--) {
+      let randomIndex = Math.floor(Math.random() * (i + 1));
+      [number[i], number[randomIndex]] = 
+      [number[randomIndex], number[i]]
     }
     return number
+  },
+  flipCard(card) {
+    if (!card.classList.contains('card')) {
+      return
+    }
+    //如果是背面 -> 翻正面
+    if (card.classList.contains('back')) {
+      card.classList.remove('back')
+      card.innerHTML = view.getCardContent(index)
+    } else {   //如果是正面 -> 翻背面
+      card.innerHTML = ''
+      card.classList.add('back')
+    }
+  },
+  showScore() {
+    const score = document.querySelector('.score')
+    score.textContent = `Score: ${model.curScore}`
+  },
+  showTired() {
+    const tried = document.querySelector('.tried')
+    tried.textContent = `You've tried: ${model.curTried} times`
   }
 }
-// render card page
-controller.generateCards()
+// controller { }
+const controller = {
+  currentState: GAME_STATE.FirstCardAwaits,
 
-//監聽器
-document.querySelectorAll('.card').forEach(card => card.addEventListener('click', event => {
-  controller.dispactchCardAction(card)
-}))
+  setListenerOnCards() {
+    // 使用querySelectorAll 每一張牌都綁監聽器
+    const card = document.querySelectorAll('.card')
+    card.forEach(card => {
+      card.addEventListener('click', event => {
+        index = Number(event.target.dataset.index)
+        controller.dispatchActions(card)
+      })
+    })
+  },
+  
+  dispatchActions(card) {
+    if (!card.classList.contains('back')) return
+    switch(this.currentState) {
+      case GAME_STATE.FirstCardAwaits:
+        view.flipCard(card)
+        model.revealedCards.push(card)
+        this.currentState = GAME_STATE.SecondCardAwaits
+        break
+      case GAME_STATE.SecondCardAwaits:
+        view.flipCard(card)
+        model.revealedCards.push(card)
+        this.currentState = GAME_STATE.Check
+        this.checkMatch()
+        break
+    }
+    //console.log(model.score);
+    console.log(model.revealedCards);
+  },
 
-// Q1 配對失敗 1000ms中繼續點會出bug耶
+  generateCards(amount) {
+    view.renderCards(amount)
+  },
+
+  checkMatch() {
+    const firstCard = Number(model.revealedCards[0].dataset.index) % 13
+    const secondCard = Number(model.revealedCards[1].dataset.index) % 13
+
+    if (firstCard === secondCard) {
+      model.curScore += 10
+      view.showScore()
+      model.revealedCards = []
+      if (model.curScore === model.goal) {
+        this.currentState = GAME_STATE.Completed
+        setTimeout(() => {
+          alert('~過關啦~')
+        }, '500') 
+      } else {
+        this.currentState = GAME_STATE.FirstCardAwaits
+      }
+    } else {
+      model.curTried += 1
+      view.showTired()
+      setTimeout(() => {
+        model.revealedCards.map(card => {
+          view.flipCard(card)
+        })
+        model.revealedCards = []
+        this.currentState = GAME_STATE.FirstCardAwaits
+      }, '1000')
+    }
+  },
+}
+
+
+// main
+controller.generateCards(52)
+controller.setListenerOnCards()

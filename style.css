@@ -1,3 +1,35 @@
+#header {
+  display: flex;  
+  margin: 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 85%;
+}
+
+/* id.header底下的 class.title */
+#header .title {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+#header .title img {
+  max-width: 3em;
+}
+
+#header .title h2 {
+  padding-left: 0.5em;
+}
+
+#header .score {
+  margin: 0;
+  color: #6c90ac;
+}
+
+#header .tried {
+  margin-top: 0;
+}
+
 #cards {
   display: flex;
   flex-wrap: wrap;
@@ -6,27 +38,32 @@
 }
 
 .card {
-  flex: 7% 1 1;
-  /* felx-basis, flex-grow, flex-shirnk */
-  /* 本身大小, 延伸比例, 縮小比例 */
-  /* 100%/13 = 7.xx%  滿是100, 一排要13張 */
-  height: 8vw; /*依視窗寬度等比例變化*/
-  border: 2px solid #e0e0e0;
+  /* 卡片做為flex-item的排版 */
+  flex: 7% 0 1;
+  height: 8vw;
   margin: 2px;
-
+  /* 卡片內部元素的排版 */
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  border: solid 2px #e0e0e0;
+  z-index: 9;
 }
 
-.card img {  /* .card 裡面的 <img> tag*/ 
+/* 主要是卡片圖片太大. 
+max-width是對parent相對大小 */
+.card {
+  display: flex;
+  justify-content: space-between;
+}
+.card img {
   max-width: 30%;
   align-self: center;
 }
 
 .card p {
   margin: 3px;
-  font-size: 10px;
+  font-size: 20px;
 }
 
 .card p:last-child {
@@ -35,70 +72,23 @@
 
 .back {
   background: url('https://assets-lighthouse.alphacamp.co/uploads/image/file/9222/ExportedContentImage_00.png');
-  background-size: cover; /*延伸填滿*/
-}
-
-.paired {
-  background-color: #dae0e3;
+  background-size: cover;
 }
 
 #header {
   display: flex;
-  margin: 0 auto;
   flex-direction: column;
+  margin: 0 auto;
   align-items: flex-end;
-  width: 85%;
+  width: 80%;
 }
+
 #header .title {
-  width: 100%;
+  width: 85%;
   display: flex;
   justify-content: flex-end;
 }
-#header .title img {
+
+#header .title img{
   max-width: 3em;
 }
-#header .title h2 {
-  padding-left:0.5em;
-}
-#header .score {
-  margin: 0;
-  color: #6c90ac;
-}
-#header .tried {
-  margin-top:0;
-}
-
-.wrong {
-  animation-name: wrongAnimation;
-  animation-duration: 0.3s;
-  animation-iteration-count: 3;
-}
-
-@keyframes wrongAnimation {
-  to {
-    border: 2px solid salmon
-  }
-}
-
-/* Game finished */
-.completed {
-  position: absolute;
-  z-index: 999;
-  top: 33vh;
-  background-color: RGBA(232, 246, 254, 0.8);
-  width: 100vw;
-  padding: 50px 0;
-}
-
-.completed > p {
-  font-size: 1.5em;
-  color: black;
-  text-align: center;
-  margin: 0;
-}
-
-.completed > p:first-child {
-  font-size: 3em;
-  font-weight: 700;
-  color: #758d9a;
-} 
